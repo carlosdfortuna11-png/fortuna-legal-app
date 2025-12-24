@@ -174,7 +174,7 @@ const CaseDetails = ({ cases, setCases, products }) => {
     return {
       honorarios: honorariosCalc,
       totalProductos: productosCalc,
-      totalGeneral: monto + honorariosCalc + productosCalc,
+      totalGeneral: honorariosCalc + productosCalc,
     };
   }, [c.montoGanado, c.products]);
 
