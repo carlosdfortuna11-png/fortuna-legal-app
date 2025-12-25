@@ -1,3 +1,15 @@
+/*
+ NETLIFY SPA FIX
+ ----------------
+ Crear un archivo llamado `_redirects` en la carpeta `public/` o `dist/` (según tu build)
+ con el siguiente contenido:
+
+ /*  /index.html  200
+
+ Esto asegura que React Router funcione correctamente en Netlify
+ al refrescar o acceder directamente a rutas como /cases/:id.
+*/
+
 import React, { useState, useEffect, useMemo } from 'react';
 import { BrowserRouter as Router, Routes, Route, useNavigate, useParams, Navigate } from 'react-router-dom';
 
