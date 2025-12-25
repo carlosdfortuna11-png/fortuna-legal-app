@@ -119,17 +119,20 @@ const Dashboard = ({ cases, onCreate, onDelete, onLogout }) => {
     <div className="min-h-screen bg-slate-900 p-6 text-white">
       <div className="max-w-5xl mx-auto">
         <div className="flex justify-between items-center mb-6">
+          <div className="flex items-center gap-3">
+            <img src="/logo.png" alt="Fortuna Mateo & Asociados" className="h-12 w-auto" />
+            <div className="text-center">
+              <h2 className="text-2xl font-bold">Expedientes</h2>
+              {JSON.parse(localStorage.getItem('session'))?.role === 'admin' && (
+                <span className="inline-block mt-1 px-3 py-1 text-xs font-semibold rounded-full bg-amber-600 text-black">Administrador</span>
+              )}
+            </div>
+          </div>
           <div className="flex gap-2">
             <button onClick={() => window.location.reload()} className="bg-sky-700 px-4 py-2 rounded">Refrescar</button>
             <button onClick={() => setConfirmLogout(true)} className="bg-rose-700 px-4 py-2 rounded">Salir</button>
+            <button onClick={onCreate} className="bg-emerald-700 px-4 py-2 rounded">Nuevo</button>
           </div>
-          <div className="text-center">
-            <h2 className="text-2xl font-bold">Expedientes</h2>
-            {JSON.parse(localStorage.getItem('session'))?.role === 'admin' && (
-              <span className="inline-block mt-1 px-3 py-1 text-xs font-semibold rounded-full bg-amber-600 text-black">Administrador</span>
-            )}
-          </div>
-          <button onClick={onCreate} className="bg-emerald-700 px-4 py-2 rounded">Nuevo</button>
         </div>
 
         <div className="grid md:grid-cols-3 gap-4">
