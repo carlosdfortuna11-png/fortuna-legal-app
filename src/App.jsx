@@ -31,6 +31,16 @@ const formatMoney = n =>
 
 const seedCases = [];
 
+// Generador de número de expediente jurídico (FMA-EXP-AAAA-XXXX)
+const generateCaseNumber = () => {
+  const year = new Date().getFullYear();
+  const counterKey = `case-counter-${year}`;
+  const last = Number(localStorage.getItem(counterKey)) || 0;
+  const next = last + 1;
+  localStorage.setItem(counterKey, String(next));
+  return `FMA-EXP-${year}-${String(next).padStart(4, '0')}`;
+};
+
 // Estado inicial limpio y validado
 
 const seedProducts = [
@@ -333,14 +343,37 @@ export default function App() {
     <Router>
       <Routes>
         <Route path="/login" element={<Login onLogin={setUser} />} />
-        <Route path="/" element={user ? (
-          <Dashboard
-            cases={cases}
-            onCreate={() => setCases([...cases, { id: `c${Date.now()}`, title: 'Nuevo expediente', client: '', montoGanado: 0, products: [] }])}
-            onDelete={id => setCases(cases.filter(c => c.id !== id))}
-            onLogout={() => { localStorage.removeItem('session'); setUser(null); }}
-          />
-        ) : <Navigate to="/login" replace />} />
+        <Route
+          path="/"
+          element={
+            user ? (
+              <Dashboard
+                cases={cases}
+                onCreate={() =>
+                  setCases([
+                    ...cases,
+                    {
+                      id: `c${Date.now()}`,
+                      caseNumber: generateCaseNumber(),
+                      title: 'Nuevo expediente',
+                      client: '',
+                      montoGanado: 0,
+                      products: [],
+                    },
+                  ])
+                }
+                onDelete={id => setCases(cases.filter(c => c.id !== id))}
+                onLogout={() => {
+                  localStorage.removeItem('session');
+                  setUser(null);
+                }}
+              />
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
+        />
+
         <Route path="/cases/:id" element={user ? <CaseDetails cases={cases} setCases={setCases} products={products} /> : <Navigate to="/login" replace />} />
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
