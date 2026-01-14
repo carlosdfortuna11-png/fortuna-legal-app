@@ -142,9 +142,14 @@ const CaseDetails = ({ cases, setCases, products }) => {
   if (!c) return <Navigate to="/" />;
 
   const totals = useMemo(() => {
-    const honorarios = (Number(c.montoGanado) * HONORARIOS_PORCENTAJE) / 100;
+    const monto = Number(c.montoGanado) || 0;
+    const honorarios = (monto * HONORARIOS_PORCENTAJE) / 100;
     const productos = c.products.reduce((s, p) => s + p.price * p.qty, 0);
-    return { honorarios, productos, total: honorarios + productos };
+    return {
+      honorarios,
+      productos,
+      total: monto + honorarios + productos,
+    };
   }, [c.montoGanado, c.products]);
 
   const update = changes => {
