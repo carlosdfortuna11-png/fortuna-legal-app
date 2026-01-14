@@ -182,13 +182,42 @@ const CaseDetails = ({ cases, setCases, products }) => {
 
       <div className="mt-6">
         <h3 className="font-semibold mb-2">Agregar servicios / productos</h3>
-        <div className="grid md:grid-cols-2 gap-2">
+
+        {/* Productos predefinidos */}
+        <div className="grid md:grid-cols-2 gap-2 mb-4">
           {products.map(p => (
             <button key={p.id} onClick={() => addProduct(p)} className="bg-slate-700 p-2 rounded flex justify-between">
               <span>{p.name}</span>
               <span>RD$ {formatMoney(p.price)}</span>
             </button>
           ))}
+        </div>
+
+        {/* Producto manual */}
+        <div className="bg-slate-800 p-3 rounded grid grid-cols-3 gap-2">
+          <input
+            placeholder="Nombre"
+            className="bg-slate-700 p-2 rounded col-span-2"
+            value={c.manualName || ''}
+            onChange={e => update({ manualName: e.target.value })}
+          />
+          <input
+            type="number"
+            placeholder="Precio"
+            className="bg-slate-700 p-2 rounded"
+            value={c.manualPrice || ''}
+            onChange={e => update({ manualPrice: Number(e.target.value) })}
+          />
+          <button
+            onClick={() => {
+              if (!c.manualName || !c.manualPrice) return;
+              addProduct({ id: Date.now().toString(), name: c.manualName, price: c.manualPrice });
+              update({ manualName: '', manualPrice: '' });
+            }}
+            className="col-span-3 bg-emerald-700 py-2 rounded"
+          >
+            Agregar producto manual
+          </button>
         </div>
       </div>
 
