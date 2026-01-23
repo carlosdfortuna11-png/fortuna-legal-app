@@ -14,6 +14,17 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { BrowserRouter as Router, Routes, Route, useNavigate, useParams, Navigate } from 'react-router-dom';
 
 /* =====================
+   Logo embebido (NO rompe Netlify)
+===================== */
+
+const LOGO_SRC = `data:image/svg+xml;utf8,
+<svg xmlns='http://www.w3.org/2000/svg' width='300' height='300' viewBox='0 0 300 300'>
+  <rect width='300' height='300' rx='40' fill='%230f172a'/>
+  <text x='50%' y='45%' dominant-baseline='middle' text-anchor='middle' fill='white' font-size='64' font-family='Arial Black'>FMA</text>
+  <text x='50%' y='65%' dominant-baseline='middle' text-anchor='middle' fill='%23cbd5e1' font-size='20' font-family='Arial'>Fortuna Mateo & Asociados</text>
+</svg>`;
+
+/* =====================
    Utilities
 ===================== */
 
@@ -39,14 +50,6 @@ const generateCaseNumber = () => {
   localStorage.setItem(counterKey, String(next));
   return `FMA-EXP-${year}-${String(next).padStart(4, '0')}`;
 };
-
-const seedProducts = [
-  { id: 'p1', name: 'Servicio Legal Básico', price: 2500 },
-  { id: 'p2', name: 'Certificación PGR', price: 1500 },
-  { id: 'p3', name: 'Gestión de Expediente', price: 2000 },
-  { id: 'p4', name: 'Audiencia', price: 3500 },
-  { id: 'p5', name: 'Redacción de Contrato', price: 4000 },
-];
 
 /* =====================
    Login
@@ -84,7 +87,10 @@ const Login = ({ onLogin }) => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-900 text-white">
       <form onSubmit={submit} className="bg-slate-800 p-6 rounded-xl w-80 grid gap-3">
-        <h2 className="text-xl font-bold text-center">Fortuna Legal</h2>
+        <div className="flex flex-col items-center gap-2 mb-2">
+          <img src={LOGO_SRC} alt="Fortuna Mateo & Asociados" className="h-16" />
+          <h2 className="text-xl font-bold text-center">Fortuna Legal</h2>
+        </div>
         <input className="bg-slate-700 p-2 rounded" placeholder="Correo" value={email} onChange={e => setEmail(e.target.value)} />
         <input type="password" className="bg-slate-700 p-2 rounded" placeholder="Contraseña" value={password} onChange={e => setPassword(e.target.value)} />
         <button className="bg-emerald-700 py-2 rounded">{isRegister ? 'Registrar' : 'Entrar'}</button>
@@ -107,7 +113,10 @@ const Dashboard = ({ cases, onCreate, onDelete, onLogout }) => {
     <div className="min-h-screen bg-slate-900 p-6 text-white">
       <div className="max-w-5xl mx-auto">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold">Expedientes</h2>
+          <div className="flex items-center gap-3">
+            <img src={LOGO_SRC} alt="Fortuna Mateo & Asociados" className="h-10" />
+            <h2 className="text-2xl font-bold">Expedientes</h2>
+          </div>
           <div className="flex gap-2">
             <button onClick={onCreate} className="bg-emerald-700 px-4 py-2 rounded">Nuevo</button>
             <button onClick={onLogout} className="bg-rose-700 px-4 py-2 rounded">Salir</button>
@@ -133,7 +142,7 @@ const Dashboard = ({ cases, onCreate, onDelete, onLogout }) => {
    Case Details
 ===================== */
 
-const CaseDetails = ({ cases, setCases, products }) => {
+const CaseDetails = ({ cases, setCases }) => {
   const { id } = useParams();
   const navigate = useNavigate();
   const index = cases.findIndex(c => c.id === id);
@@ -148,7 +157,7 @@ const CaseDetails = ({ cases, setCases, products }) => {
     return {
       honorarios,
       productos,
-      total: honorarios + productos, // LO QUE REALMENTE SE COBRA
+      total: honorarios + productos,
     };
   }, [c.montoGanado, c.products]);
 
@@ -156,19 +165,6 @@ const CaseDetails = ({ cases, setCases, products }) => {
     const copy = [...cases];
     copy[index] = { ...copy[index], ...changes };
     setCases(copy);
-  };
-
-  const addProduct = prod => {
-    const exists = c.products.find(p => p.id === prod.id);
-    if (exists) {
-      update({
-        products: c.products.map(p =>
-          p.id === prod.id ? { ...p, qty: (p.qty || 1) + 1 } : p
-        ),
-      });
-    } else {
-      update({ products: [...c.products, { ...prod, qty: 1 }] });
-    }
   };
 
   const updateQty = (pid, qty) => {
@@ -185,7 +181,7 @@ const CaseDetails = ({ cases, setCases, products }) => {
 
       {/* Header pantalla */}
       <div className="mt-4 flex items-center gap-4">
-        <img src="/logo.png" alt="Fortuna Mateo & Asociados" className="h-12" />
+        <img src={LOGO_SRC} alt="Fortuna Mateo & Asociados" className="h-12" />
         <div>
           <h2 className="text-xl font-bold">{c.caseNumber}</h2>
           <p className="text-sm text-slate-400">Fortuna Mateo & Asociados</p>
@@ -207,19 +203,8 @@ const CaseDetails = ({ cases, setCases, products }) => {
       />
 
       <div className="mt-6">
-        <h3 className="font-semibold mb-2">Agregar servicios / productos</h3>
+        <h3 className="font-semibold mb-2">Agregar producto / servicio</h3>
 
-        {/* Productos predefinidos */}
-        <div className="grid md:grid-cols-2 gap-2 mb-4">
-          {products.map(p => (
-            <button key={p.id} onClick={() => addProduct(p)} className="bg-slate-700 p-2 rounded flex justify-between">
-              <span>{p.name}</span>
-              <span>RD$ {formatMoney(p.price)}</span>
-            </button>
-          ))}
-        </div>
-
-        {/* Producto manual */}
         <div className="bg-slate-800 p-3 rounded grid grid-cols-3 gap-2">
           <input
             placeholder="Nombre"
@@ -240,24 +225,20 @@ const CaseDetails = ({ cases, setCases, products }) => {
               const price = Number(c.manualPrice);
               if (!name || !price || price <= 0) return;
 
-              // ⚠️ Importante: una sola actualización para no pisar products
-              const newProduct = { id: Date.now().toString(), name, price };
-              const updatedProducts = [...c.products, { ...newProduct, qty: 1 }];
-
+              const newProduct = { id: Date.now().toString(), name, price, qty: 1 };
               update({
-                products: updatedProducts,
+                products: [...c.products, newProduct],
                 manualName: '',
                 manualPrice: '',
               });
             }}
             className="col-span-3 bg-emerald-700 py-2 rounded"
           >
-            Agregar producto manual
+            Agregar producto
           </button>
         </div>
       </div>
 
-      {/* Lista de productos agregados */}
       <div className="mt-6 bg-slate-800 p-3 rounded">
         <h3 className="font-semibold mb-2">Detalle del expediente</h3>
         {c.products.length === 0 && <p className="text-sm">Sin productos agregados</p>}
@@ -279,7 +260,6 @@ const CaseDetails = ({ cases, setCases, products }) => {
         ))}
       </div>
 
-      {/* Totales */}
       <div className="mt-4 bg-slate-800 p-3 rounded">
         <div>Monto ganado: RD$ {formatMoney(c.montoGanado)}</div>
         <div>Honorarios ({HONORARIOS_PORCENTAJE}%): RD$ {formatMoney(totals.honorarios)}</div>
@@ -297,7 +277,7 @@ const CaseDetails = ({ cases, setCases, products }) => {
       {/* Header solo para impresión */}
       <div className="hidden print:block print:mb-6 print:border-b print:pb-4">
         <div className="flex items-center gap-4">
-          <img src="/logo.png" alt="Fortuna Mateo & Asociados" className="h-16" />
+          <img src={LOGO_SRC} alt="Fortuna Mateo & Asociados" className="h-16" />
           <div>
             <h1 className="text-xl font-bold">Fortuna Mateo & Asociados</h1>
             <p className="text-sm">Expediente: {c.caseNumber}</p>
@@ -315,7 +295,6 @@ const CaseDetails = ({ cases, setCases, products }) => {
 export default function App() {
   const [user, setUser] = useState(null);
   const [cases, setCases] = useState(() => JSON.parse(localStorage.getItem('cases')) || seedCases);
-  const [products] = useState(seedProducts);
 
   useEffect(() => {
     const users = JSON.parse(localStorage.getItem('users')) || [];
@@ -369,7 +348,7 @@ export default function App() {
         />
         <Route
           path="/cases/:id"
-          element={user ? <CaseDetails cases={cases} setCases={setCases} products={products} /> : <Navigate to="/login" />}
+          element={user ? <CaseDetails cases={cases} setCases={setCases} /> : <Navigate to="/login" />}
         />
       </Routes>
     </Router>
