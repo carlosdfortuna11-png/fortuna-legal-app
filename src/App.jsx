@@ -144,11 +144,11 @@ const CaseDetails = ({ cases, setCases, products }) => {
   const totals = useMemo(() => {
     const monto = Number(c.montoGanado) || 0;
     const honorarios = (monto * HONORARIOS_PORCENTAJE) / 100;
-    const productos = c.products.reduce((s, p) => s + p.price * p.qty, 0);
+    const productos = c.products.reduce((s, p) => s + (Number(p.price) || 0) * (Number(p.qty) || 1), 0);
     return {
       honorarios,
       productos,
-      total: monto + honorarios + productos,
+      total: honorarios + productos, // LO QUE REALMENTE SE COBRA
     };
   }, [c.montoGanado, c.products]);
 
@@ -161,7 +161,11 @@ const CaseDetails = ({ cases, setCases, products }) => {
   const addProduct = prod => {
     const exists = c.products.find(p => p.id === prod.id);
     if (exists) {
-      update({ products: c.products.map(p => p.id === prod.id ? { ...p, qty: p.qty + 1 } : p) });
+      update({
+        products: c.products.map(p =>
+          p.id === prod.id ? { ...p, qty: (p.qty || 1) + 1 } : p
+        ),
+      });
     } else {
       update({ products: [...c.products, { ...prod, qty: 1 }] });
     }
@@ -179,11 +183,28 @@ const CaseDetails = ({ cases, setCases, products }) => {
     <div className="min-h-screen bg-slate-900 p-6 text-white">
       <button onClick={() => navigate('/')} className="underline">← Volver</button>
 
-      <h2 className="text-xl font-bold mt-4">{c.caseNumber}</h2>
+      {/* Header pantalla */}
+      <div className="mt-4 flex items-center gap-4">
+        <img src="/logo.png" alt="Fortuna Mateo & Asociados" className="h-12" />
+        <div>
+          <h2 className="text-xl font-bold">{c.caseNumber}</h2>
+          <p className="text-sm text-slate-400">Fortuna Mateo & Asociados</p>
+        </div>
+      </div>
 
-      <input className="bg-slate-800 p-2 rounded w-full mt-2" value={c.title} onChange={e => update({ title: e.target.value })} />
+      <input
+        className="bg-slate-800 p-2 rounded w-full mt-3"
+        value={c.title}
+        onChange={e => update({ title: e.target.value })}
+      />
 
-      <input type="number" className="bg-slate-800 p-2 rounded w-full mt-2" value={c.montoGanado} onChange={e => update({ montoGanado: Number(e.target.value) })} placeholder="Monto ganado" />
+      <input
+        type="number"
+        className="bg-slate-800 p-2 rounded w-full mt-2"
+        value={c.montoGanado}
+        onChange={e => update({ montoGanado: Number(e.target.value) })}
+        placeholder="Monto ganado"
+      />
 
       <div className="mt-6">
         <h3 className="font-semibold mb-2">Agregar servicios / productos</h3>
@@ -215,9 +236,19 @@ const CaseDetails = ({ cases, setCases, products }) => {
           />
           <button
             onClick={() => {
-              if (!c.manualName || !c.manualPrice) return;
-              addProduct({ id: Date.now().toString(), name: c.manualName, price: c.manualPrice });
-              update({ manualName: '', manualPrice: '' });
+              const name = c.manualName?.trim();
+              const price = Number(c.manualPrice);
+              if (!name || !price || price <= 0) return;
+
+              // ⚠️ Importante: una sola actualización para no pisar products
+              const newProduct = { id: Date.now().toString(), name, price };
+              const updatedProducts = [...c.products, { ...newProduct, qty: 1 }];
+
+              update({
+                products: updatedProducts,
+                manualName: '',
+                manualPrice: '',
+              });
             }}
             className="col-span-3 bg-emerald-700 py-2 rounded"
           >
@@ -226,6 +257,7 @@ const CaseDetails = ({ cases, setCases, products }) => {
         </div>
       </div>
 
+      {/* Lista de productos agregados */}
       <div className="mt-6 bg-slate-800 p-3 rounded">
         <h3 className="font-semibold mb-2">Detalle del expediente</h3>
         {c.products.length === 0 && <p className="text-sm">Sin productos agregados</p>}
@@ -233,21 +265,34 @@ const CaseDetails = ({ cases, setCases, products }) => {
           <div key={p.id} className="flex items-center justify-between mb-2">
             <span>{p.name}</span>
             <div className="flex items-center gap-2">
-              <input type="number" min="1" className="w-16 bg-slate-700 p-1 rounded" value={p.qty} onChange={e => updateQty(p.id, Number(e.target.value))} />
-              <span>RD$ {formatMoney(p.price * p.qty)}</span>
+              <input
+                type="number"
+                min="1"
+                className="w-16 bg-slate-700 p-1 rounded"
+                value={p.qty}
+                onChange={e => updateQty(p.id, Number(e.target.value))}
+              />
+              <span>RD$ {formatMoney((Number(p.price) || 0) * (Number(p.qty) || 1))}</span>
               <button onClick={() => removeProduct(p.id)} className="text-rose-400">✕</button>
             </div>
           </div>
         ))}
       </div>
 
+      {/* Totales */}
       <div className="mt-4 bg-slate-800 p-3 rounded">
-        <div>Honorarios: RD$ {formatMoney(totals.honorarios)}</div>
+        <div>Monto ganado: RD$ {formatMoney(c.montoGanado)}</div>
+        <div>Honorarios ({HONORARIOS_PORCENTAJE}%): RD$ {formatMoney(totals.honorarios)}</div>
         <div>Productos: RD$ {formatMoney(totals.productos)}</div>
-        <div className="font-bold">TOTAL: RD$ {formatMoney(totals.total)}</div>
+        <div className="font-bold mt-2">TOTAL A COBRAR: RD$ {formatMoney(totals.total)}</div>
       </div>
 
-      <button onClick={() => window.print()} className="mt-6 bg-indigo-700 px-4 py-2 rounded print:hidden">Imprimir / PDF</button>
+      <button
+        onClick={() => window.print()}
+        className="mt-6 bg-indigo-700 px-4 py-2 rounded print:hidden"
+      >
+        Imprimir / PDF
+      </button>
 
       {/* Header solo para impresión */}
       <div className="hidden print:block print:mb-6 print:border-b print:pb-4">
@@ -291,8 +336,41 @@ export default function App() {
     <Router>
       <Routes>
         <Route path="/login" element={<Login onLogin={setUser} />} />
-        <Route path="/" element={user ? <Dashboard cases={cases} onCreate={() => setCases([...cases, { id: Date.now().toString(), caseNumber: generateCaseNumber(), title: 'Nuevo expediente', montoGanado: 0, products: [] }])} onDelete={id => setCases(cases.filter(c => c.id !== id))} onLogout={() => { localStorage.removeItem('session'); setUser(null); }} /> : <Navigate to="/login" />} />
-        <Route path="/cases/:id" element={user ? <CaseDetails cases={cases} setCases={setCases} products={products} /> : <Navigate to="/login" />} />
+        <Route
+          path="/"
+          element={
+            user ? (
+              <Dashboard
+                cases={cases}
+                onCreate={() =>
+                  setCases([
+                    ...cases,
+                    {
+                      id: Date.now().toString(),
+                      caseNumber: generateCaseNumber(),
+                      title: 'Nuevo expediente',
+                      montoGanado: 0,
+                      products: [],
+                      manualName: '',
+                      manualPrice: '',
+                    },
+                  ])
+                }
+                onDelete={id => setCases(cases.filter(c => c.id !== id))}
+                onLogout={() => {
+                  localStorage.removeItem('session');
+                  setUser(null);
+                }}
+              />
+            ) : (
+              <Navigate to="/login" />
+            )
+          }
+        />
+        <Route
+          path="/cases/:id"
+          element={user ? <CaseDetails cases={cases} setCases={setCases} products={products} /> : <Navigate to="/login" />}
+        />
       </Routes>
     </Router>
   );
